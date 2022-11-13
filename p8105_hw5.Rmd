@@ -1,0 +1,97 @@
+---
+title: "p8105_nr2774"
+output: github_document
+---
+
+### Problem 1
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(viridis)
+library(dplyr)
+library(rvest)
+library(purrr)
+library(ggplot2)
+library(patchwork)
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+
+```{r setup, include=FALSE}
+
+list_of_files = list.files("~/Desktop/Data Science/HW/p8105_hw5_nr2774/data_hw5", full.names = TRUE)
+
+```
+
+### Problem 2
+
+```{r setup, include=FALSE}
+
+df = read_csv(file = "data_hw5/homicide-data.csv") |> 
+    janitor::clean_names() |> 
+    mutate(city_state = paste(city,",", state), unsolved_homicides = str_detect(  
+               “Closed without arrest” or “Open/No arrest”)) |>
+    as.tibble()
+
+df_sum = df |> group_by(city_state) |>
+    summarise(total_homicides = n()) 
+
+
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+```
+
+
+```{r setup, include=FALSE}
+
+    
+    mutate(filename = x) %>% 
+    separate(filename, into = c("file", "remove"), sep = "\\.") %>%
+    select(-remove) %>% 
+    separate(file, into = c("arm", "subject_id"), sep = "_") 
+  df
+}
+combined_df = 
+  tibble(file_name) %>% 
+    mutate(data = map(file_name, import_data)) %>% 
+      unnest()
+```
+
+
+```{r setup, include=FALSE}
