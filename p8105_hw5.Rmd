@@ -6,7 +6,6 @@ output: github_document
 ### Problem 1
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(viridis)
 library(dplyr)
@@ -43,14 +42,99 @@ list_of_files = list.files("~/Desktop/Data Science/HW/p8105_hw5_nr2774/data_hw5"
 
 df = read_csv(file = "data_hw5/homicide-data.csv") |> 
     janitor::clean_names() |> 
-    mutate(city_state = paste(city,",", state), unsolved_homicides = str_detect(  
-               “Closed without arrest” or “Open/No arrest”)) |>
+    mutate(city_state = paste(city,",", state)) |>
     as.tibble()
 
-df_sum = df |> group_by(city_state) |>
+```
+
+
+```{r}
+# reported date range 
+pull(df,reported_date) |> 
+  as.character() %>% 
+  range()
+#victim's age range
+pull(df,victim_age) |> 
+    as.character() |> 
+    as.integer() |>  
+    range(na.rm =TRUE)
+```
+
+#### Describe the raw data:
+This data set contains `r nrow(df)` homicides records. Reported date range is from 20070101 to 20171231 and victim age range is from 0 to 102 years old. Other information such as victim`s name,race,sex and the location details and disposition state of these homicides were included in this data set. 
+
+In order to check if the number of city_state matches with city.i run the folowoing code.
+
+```{r collapse=TRUE}
+#the number of city_state 
+nrow(distinct(df,city_state))
+# the number of cities
+nrow(distinct(df,city))
+#check the dataset and find the city "Tulsa" shows up in two states:
+ filter(df,city == "Tulsa") |> 
+     distinct(state)
+```
+
+Number of city_state were 51 whereas number of state was 50. It means there was an overlap with city names. After filtering, city "Tulsa" was recorded both in Oklahoma and Al. Therefore, Tulsa recorded under Al will be excluded from further data set.  
+* Homocide 
+
+```{r}
+# Why there is still 51 variables ??
+homicide_sum = df %>% 
+    filter(city_state != "Tulsa, AL") |> 
+    group_by(city_state) |> 
     summarise(total_homicides = n()) 
+```
+
+* Creating homocide summary table 
+
+```{r}
+unsolved_sum = df %>%
+    filter(city_state != "Tulsa, AL") |>
+    filter(disposition=="Closed without arrest"|disposition=="Open/No arrest") %>%   group_by(city_state) %>% 
+  summarise(unsolved=n())
 
 
+# why this is not workiing? 
+homicide_sum = df |> 
+    filter(city_state != "Tulsa, AL") |>
+    group_by(city_state) |>
+    mutate(
+        unsolved = ifelse(disposition == "Closed by arrast", 0, 1)
+        ) |> 
+    summarise(
+        unsolved_homicides = sum(unsolved),
+        total_homicides = n()
+    ) |> 
+    arrange(desc(total_homicides))
+
+  homicide_sum |>  
+  knitr::kable()  
+  
+ 
+joined_sum= left_join(homicide_sum,unsolved_sum,by="city_state") |>
+    drop(city_state = "Tulsa, AL")
+
+view(joined_sum,"Tulsa, AL") 
+
+```
+
+* Baltimore analysis
+
+```{r setup, include=FALSE}
+baltimore_analysis = joined_sum |>
+    filter(city_state == "Baltimore, MD") |> 
+    prop.test(baltimore_analysis$unsolved_sum, baltimore_analysis$total_homicides)
+
+broom::tidy(baltimore_analysis) %>% 
+select(estimate, conf.low, conf.high)
+
+pull(balti,estimate)
+#confidence intervals
+#low limit
+pull(balti,conf.low)
+#high limit
+pull(balti,conf.high)
 ```
 
 
@@ -59,39 +143,14 @@ df_sum = df |> group_by(city_state) |>
 
 
 ```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-
-    
-    mutate(filename = x) %>% 
-    separate(filename, into = c("file", "remove"), sep = "\\.") %>%
-    select(-remove) %>% 
-    separate(file, into = c("arm", "subject_id"), sep = "_") 
-  df
-}
-combined_df = 
-  tibble(file_name) %>% 
-    mutate(data = map(file_name, import_data)) %>% 
-      unnest()
-```
-
-
-```{r setup, include=FALSE}
+Create a plot that shows the estimates and CIs for each city 
+```{r,fig.width=10}
+combined_proptest %>% 
+  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
+  ggplot(aes(x = city_state, y = estimate, ymin = conf.low, ymax = conf.high,color=city_state)) +
+    geom_point() +
+    geom_errorbar() +
+    #theme_bw() +
+    theme(axis.text.x = element_text(angle = 90,size = 8)) +
+  theme(legend.position = "none")+
+  labs(x="City",y="Proportion Estimate",title="Proportion Estimates for All Cities")
