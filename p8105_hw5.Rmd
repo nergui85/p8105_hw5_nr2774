@@ -148,17 +148,6 @@ all_cities_proportion |>
 ```
 
 
-### Problem 3
-
-* Conducting a simulation to explore power in a one-sample t-test.
-
-```{r}
-# Construct function for one-sample t-test
-
-
-```
-
-
 
 
 
