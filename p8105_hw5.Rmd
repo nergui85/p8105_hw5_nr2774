@@ -30,20 +30,15 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
 
-```{r setup, include=FALSE}
-
-list_of_files = list.files("~/Desktop/Data Science/HW/p8105_hw5_nr2774/data_hw5", full.names = TRUE)
-
-```
-
 ### Problem 2
 
 ```{r setup, include=FALSE}
 
 df = read_csv(file = "data_hw5/homicide-data.csv") |> 
     janitor::clean_names() |> 
-    mutate(city_state = paste(city,",", state)) |>
+    mutate(city_state = str_c(city, ",", state )) |>
     as.tibble()
+
 
 ```
 
@@ -81,76 +76,113 @@ Number of city_state were 51 whereas number of state was 50. It means there was 
 ```{r}
 # Why there is still 51 variables ??
 homicide_sum = df %>% 
-    filter(city_state != "Tulsa, AL") |> 
     group_by(city_state) |> 
-    summarise(total_homicides = n()) 
+    summarise(total_homicides = n()) |> 
+    filter(city_state != "Tulsa,AL")
+
 ```
 
 * Creating homocide summary table 
 
 ```{r}
-unsolved_sum = df %>%
-    filter(city_state != "Tulsa, AL") |>
-    filter(disposition=="Closed without arrest"|disposition=="Open/No arrest") %>%   group_by(city_state) %>% 
-  summarise(unsolved=n())
+# Summarize within cities to obtain the total number of homicides and the number of unsolved homicides
 
-
-# why this is not workiing? 
-homicide_sum = df |> 
-    filter(city_state != "Tulsa, AL") |>
-    group_by(city_state) |>
-    mutate(
-        unsolved = ifelse(disposition == "Closed by arrast", 0, 1)
-        ) |> 
-    summarise(
-        unsolved_homicides = sum(unsolved),
-        total_homicides = n()
-    ) |> 
-    arrange(desc(total_homicides))
-
-  homicide_sum |>  
-  knitr::kable()  
-  
- 
-joined_sum= left_join(homicide_sum,unsolved_sum,by="city_state") |>
-    drop(city_state = "Tulsa, AL")
-
-view(joined_sum,"Tulsa, AL") 
-
+homicide_sum = df %>% 
+  #exclude "Tulsa, AL"
+  group_by(city_state) %>% 
+  mutate(
+    unsolved = ifelse(disposition == "Closed by arrest",0,1)
+      ) %>% 
+  summarise(
+    total_homicides = n(),
+    unsolved_homicides = sum(unsolved)
+  ) %>% 
+  arrange(desc(total_homicides)) |> 
+    subset(city_state != "Tulsa,AL")
+homicide_sum %>% 
+  knitr::kable() 
 ```
 
 * Baltimore analysis
 
 ```{r setup, include=FALSE}
-baltimore_analysis = joined_sum |>
-    filter(city_state == "Baltimore, MD") |> 
-    prop.test(baltimore_analysis$unsolved_sum, baltimore_analysis$total_homicides)
+# Estimating the proportion of unsolved homicides in Baltimore, MD
 
-broom::tidy(baltimore_analysis) %>% 
-select(estimate, conf.low, conf.high)
+baltimore_prop = 
+  homicide_sum %>%
+  filter(city_state == "Baltimore,MD")
+ test_prop = prop.test(baltimore$unsolved_homicides, baltimore$total_homicides)
+ 
+ test_prop %>% 
+  broom::tidy() %>% 
+  select(estimate, conf.low, conf.high)
 
-pull(balti,estimate)
-#confidence intervals
-#low limit
-pull(balti,conf.low)
-#high limit
-pull(balti,conf.high)
+```
+
+* Iteration for all cities (proportion of unsolved homicides)
+
+```{r}
+# Estimating the proportion of unsolved homicides in all cities by applying iteration 
+all_cities_proportion = 
+  homicide_sum |> 
+  mutate(
+    tests_prop = purrr::map2(.x = unsolved_homicides, .y = total_homicides, ~prop.test(x = .x, n = .y)),
+    tests_tidy = purrr::map(.x = tests_prop, ~broom::tidy(.x))
+  ) |>  
+  select(-tests_prop) |>  
+  unnest(tests_tidy) |>  
+  select(city_state, estimate, starts_with("conf"))
+
 ```
 
 
-```{r setup, include=FALSE}
-```
-
-
-```{r setup, include=FALSE}
-Create a plot that shows the estimates and CIs for each city 
-```{r,fig.width=10}
-combined_proptest %>% 
-  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
-  ggplot(aes(x = city_state, y = estimate, ymin = conf.low, ymax = conf.high,color=city_state)) +
-    geom_point() +
-    geom_errorbar() +
-    #theme_bw() +
+```{r}
+all_cities_proportion |>  
+  mutate(city_state = fct_inorder(city_state)) |>  
+  ggplot(aes(x = city_state, y = estimate, fill = city_state)) + 
+    geom_point() + geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
     theme(axis.text.x = element_text(angle = 90,size = 8)) +
-  theme(legend.position = "none")+
-  labs(x="City",y="Proportion Estimate",title="Proportion Estimates for All Cities")
+  theme(legend.position = "none") +
+  labs(x = "City",y = "Proportion Estimate",title = "Proportion Estimates for All Cities")
+      
+```
+
+
+### Problem 3
+
+* Conducting a simulation to explore power in a one-sample t-test.
+
+```{r}
+# Construct function for one-sample t-test
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
