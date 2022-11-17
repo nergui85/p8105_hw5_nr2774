@@ -77,7 +77,7 @@ Number of city_state were 51 whereas number of state was 50. It means there was 
 
 ```{r, warning = FALSE, message=FALSE}
 # Why there is still 51 variables ??
-homicide_sum = df %>% 
+homicide_sum = df |>  
     group_by(city_state) |> 
     summarise(total_homicides = n()) |> 
     filter(city_state != "Tulsa,AL")
