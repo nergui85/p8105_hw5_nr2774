@@ -13,6 +13,7 @@ library(rvest)
 library(purrr)
 library(ggplot2)
 library(patchwork)
+
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -32,7 +33,7 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ### Problem 2
 
-```{r setup, include=FALSE}
+```{r, warning = FALSE, message=FALSE}
 
 df = read_csv(file = "data_hw5/homicide-data.csv") |> 
     janitor::clean_names() |> 
@@ -43,7 +44,7 @@ df = read_csv(file = "data_hw5/homicide-data.csv") |>
 ```
 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # reported date range 
 pull(df,reported_date) |> 
   as.character() %>% 
@@ -60,7 +61,7 @@ This data set contains `r nrow(df)` homicides records. Reported date range is fr
 
 In order to check if the number of city_state matches with city.i run the folowoing code.
 
-```{r collapse=TRUE}
+```{r, warning = FALSE, message=FALSE}
 #the number of city_state 
 nrow(distinct(df,city_state))
 # the number of cities
@@ -73,7 +74,7 @@ nrow(distinct(df,city))
 Number of city_state were 51 whereas number of state was 50. It means there was an overlap with city names. After filtering, city "Tulsa" was recorded both in Oklahoma and Al. Therefore, Tulsa recorded under Al will be excluded from further data set.  
 * Homocide 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # Why there is still 51 variables ??
 homicide_sum = df %>% 
     group_by(city_state) |> 
@@ -84,7 +85,7 @@ homicide_sum = df %>%
 
 * Creating homocide summary table 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # Summarize within cities to obtain the total number of homicides and the number of unsolved homicides
 
 homicide_sum = df %>% 
@@ -105,13 +106,13 @@ homicide_sum %>%
 
 * Baltimore analysis
 
-```{r setup, include=FALSE}
+```{r, warning = FALSE, message=FALSE}
 # Estimating the proportion of unsolved homicides in Baltimore, MD
 
 baltimore_prop = 
   homicide_sum %>%
   filter(city_state == "Baltimore,MD")
- test_prop = prop.test(baltimore$unsolved_homicides, baltimore$total_homicides)
+ test_prop = prop.test(baltimore_prop$unsolved_homicides, baltimore_prop$total_homicides)
  
  test_prop %>% 
   broom::tidy() %>% 
@@ -121,7 +122,7 @@ baltimore_prop =
 
 * Iteration for all cities (proportion of unsolved homicides)
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # Estimating the proportion of unsolved homicides in all cities by applying iteration 
 all_cities_proportion = 
   homicide_sum |> 
@@ -136,7 +137,7 @@ all_cities_proportion =
 ```
 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 all_cities_proportion |>  
   mutate(city_state = fct_inorder(city_state)) |>  
   ggplot(aes(x = city_state, y = estimate, fill = city_state)) + 
@@ -148,6 +149,15 @@ all_cities_proportion |>
 ```
 
 
+### Problem 3
+
+* Conducting a simulation to explore power in a one-sample t-test.
+
+```{r, warning = FALSE, message=FALSE}
+# Construct function for one-sample t-test
+
+
+```
 
 
 
